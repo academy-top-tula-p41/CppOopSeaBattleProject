@@ -26,14 +26,14 @@ public:
 class HumanPlayer : public Player
 {
 public:
-	void SetFlotilla() override;
-	Point Shot() override;
+	void SetFlotilla() override {}
+	Point Shot() override { return Point{}; }
 };
 
 class ComputerPlayer : public Player
 {
 public:
-	void SetFlotilla() override;
-	Point Shot() override;
+	void SetFlotilla() override {}
+	Point Shot() override { return Point{}; }
 };
 
