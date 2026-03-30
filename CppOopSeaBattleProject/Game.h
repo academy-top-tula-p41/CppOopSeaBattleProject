@@ -9,7 +9,7 @@ class Game
 
 	Platform* platform;
 public:
-	Game();
+	Game(Platform* platform);
 
 	void Setup();
 	void Process();

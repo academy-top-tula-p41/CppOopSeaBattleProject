@@ -55,6 +55,8 @@ public:
 	void WritePosition(Position position, std::string message);
 	void WritePosition(Position position, char symbol);
 
+	void WriteWidthPosition(Position position, int width, std::string message);
+
 	int GetChar();
 	int KeyPressed();
 

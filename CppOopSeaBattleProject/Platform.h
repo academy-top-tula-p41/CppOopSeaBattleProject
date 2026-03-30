@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include "Ship.h"
 
@@ -21,7 +22,7 @@ public:
 class IGamePlatform
 {
 public:
-	virtual void SetupGame() = 0;
+	virtual std::string SetupGame() = 0;
 	virtual void ViewGame() = 0;
 	virtual void GameOver() = 0;
 };
@@ -29,7 +30,7 @@ public:
 class IPlayerPlatform
 {
 public:
-	virtual std::vector<Ship*> SetFlotilla() = 0;
+	virtual std::vector<Ship*> SetFlotilla(std::string name) = 0;
 	virtual Point Shot() = 0;
 };
 

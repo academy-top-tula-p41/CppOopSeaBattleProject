@@ -51,7 +51,11 @@ View::View(Position position,
 	foreground{ foreground },
 	isVisible{ false },
 	bufferViewed{ nullptr },
-	bufferSaved{ nullptr }{}
+	bufferSaved{ nullptr }
+{
+	console->Background(this->background);
+	console->Foreground(this->foreground);
+}
 
 View::View(Position position, Size size)
 	: View(position, size, Colors::Blue, Colors::White){}

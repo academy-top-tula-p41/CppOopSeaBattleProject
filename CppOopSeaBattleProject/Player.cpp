@@ -52,3 +52,12 @@ HitType Player::CheckShot(Point point)
 	}
 }
 
+HumanPlayer::HumanPlayer(std::string name, 
+	IPlayerPlatform* playerPlatform)
+	: Player(name), playerPlatform{ playerPlatform } {}
+
+void HumanPlayer::SetFlotilla()
+{
+	this->flotilla = this->playerPlatform->SetFlotilla(this->Name());
+	this->battleField->SetShips(this->flotilla);
+}

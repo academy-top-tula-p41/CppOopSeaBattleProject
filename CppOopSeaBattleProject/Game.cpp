@@ -1,16 +1,19 @@
 #include "Game.h"
 
-Game::Game()
+Game::Game(Platform* platform) 
+	: platform{ platform }{}
+
+void Game::Setup()
 {
-	HumanPlayer* humanPlayer = new HumanPlayer();
+	std::string name = platform->GamePlatform()->SetupGame();
+
+	HumanPlayer* humanPlayer = new HumanPlayer(name, platform->PlayerPlatform());
+
 	ComputerPlayer* computerPlayer = new ComputerPlayer();
 
 	players.push_back(humanPlayer);
 	players.push_back(computerPlayer);
-}
 
-void Game::Setup()
-{
 	for (Player* player : players)
 		player->SetFlotilla();
 }

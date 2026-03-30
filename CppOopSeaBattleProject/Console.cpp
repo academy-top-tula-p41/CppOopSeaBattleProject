@@ -54,6 +54,13 @@ void Console::WritePosition(Position position, char symbol)
 	this->WritePosition(position, std::string(1, symbol));
 }
 
+void Console::WriteWidthPosition(Position position, int width, std::string message)
+{
+	CursorPosition(position);
+	Write(std::string(width - message.length(), ' '));
+	Write(message);
+}
+
 int Console::GetChar()
 {
 	int key{ _getch() };

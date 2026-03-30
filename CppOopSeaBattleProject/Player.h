@@ -1,9 +1,11 @@
 #pragma once
 #include <string>
 #include "Field.h"
+#include "Platform.h"
 
 class Player
 {
+protected:
 	std::string name;
 	Field* battleField;
 	std::vector<Ship*> flotilla;
@@ -25,8 +27,11 @@ public:
 
 class HumanPlayer : public Player
 {
+	IPlayerPlatform* playerPlatform;
 public:
-	void SetFlotilla() override {}
+	HumanPlayer(std::string name, IPlayerPlatform* playerPlatform);
+
+	void SetFlotilla() override;
 	Point Shot() override { return Point{}; }
 };
 
