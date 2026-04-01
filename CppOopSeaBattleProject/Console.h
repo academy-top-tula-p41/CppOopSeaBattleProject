@@ -35,6 +35,18 @@ enum class Colors
 	White
 };
 
+enum class Key
+{
+	ArrawLeft = 75,
+	ArrawRight = 77,
+	ArrawUp = 72,
+	ArrawDown = 80,
+
+	Enter = 13,
+	Space = 32,
+	Esc = 27
+};
+
 class Console
 {
 	HANDLE descriptor;

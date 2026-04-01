@@ -66,6 +66,34 @@ void PlayerConsolePlatform::FieldShow(std::string name)
             std::string(fieldSize * cellSize * widthRate, (char)GameChar::Water));
 }
 
+void PlayerConsolePlatform::ShipsShow()
+{
+    int top{ rowStart + margin + 1 };
+    int left{ columnStart + margin * cellSize };
+
+    for (Ship* ship : this->flotilla)
+    {
+        int row{ top + ship->Row() * cellSize };
+        int column{ left + ship->Column() * cellSize * widthRate };
+        int width{ ship->Size() * cellSize * widthRate };
+        int height{ cellSize };
+
+        if (ship->Direction() == DirectionShip::Vertical)
+        {
+            int w{ width };
+            width = height * 2;
+            height = w / 2;
+        }
+
+        View* shipView = new View(
+            { row, column },
+            { width, height },
+            Colors::Green,
+            Colors::White);
+        shipView->Show();
+    }
+}
+
 int PlayerConsolePlatform::SelectShip()
 {
     int fieldWidth{ (fieldSize + margin) * cellSize * widthRate };
@@ -91,25 +119,271 @@ int PlayerConsolePlatform::SelectShip()
     for (int size{}; size < shipCounts.size(); size++)
     {
         Colors backColor = (size == currentShip) ? Colors::Blue : Colors::Green;
+        if (!shipCounts[size])
+            backColor = Colors::Magenta;
+        
+        shipViews[size]->Background() = backColor;
+        shipViews[size]->Show();
 
-        View* shipSelect = new View(
-            { rowStart + size * 2 * cellSize , columnStart + fieldWidth + 3 * margin * cellSize },
-            { (size + 1) * cellSize * widthRate, cellSize },
-            backColor, Colors::White);
-        shipSelect->Show();
-        shipSelect->GetConsole()->WritePosition(
+        View::GetConsole()->Background(Colors::Black);
+        View::GetConsole()->WritePosition(
             { rowStart + size * 2 * cellSize , columnStart + fieldWidth + 2 * margin * cellSize },
             std::to_string(shipCounts[size]));
     }
 
-    return 0;
+    Key key;
+    bool isSelect{ false };
+
+    while (true)
+    {
+        if (View::GetConsole()->KeyPressed())
+        {
+            key = (Key)View::GetConsole()->GetChar();
+
+            switch (key)
+            {
+            case Key::ArrawUp:
+            case Key::ArrawLeft:
+                isNotOk = true;
+                for(index = currentShip - 1; index >= 0; index-- )
+                    if (shipCounts[index])
+                    {
+                        isNotOk = false;
+                        break;
+                    }
+                if (!isNotOk)
+                    currentShip = index;
+                break;
+
+            case Key::ArrawRight:
+            case Key::ArrawDown:
+                isNotOk = true;
+                for (index = currentShip + 1; index < shipViews.size(); index++)
+                    if (shipCounts[index])
+                    {
+                        isNotOk = false;
+                        break;
+                    }
+                if (!isNotOk)
+                    currentShip = index;
+                break;
+
+            case Key::Enter:
+            case Key::Space:
+                isSelect = true;
+                break;
+
+            case Key::Esc:
+                break;
+            default:
+                break;
+            }
+
+            if (isSelect) break;
+
+            for (int size{}; size < shipCounts.size(); size++)
+            {
+                Colors backColor = (size == currentShip) ? Colors::Blue : Colors::Green;
+                if (!shipCounts[size])
+                    backColor = Colors::Magenta;
+
+                shipViews[size]->Background() = backColor;
+                shipViews[size]->Show();
+            }
+        }
+    }
+
+    return currentShip;
+}
+
+Ship* PlayerConsolePlatform::SetShip(int size)
+{
+    int top{ rowStart + margin + 1 };
+    int left{ columnStart + margin * cellSize };
+    int right{ left + fieldSize * cellSize * widthRate };
+    int bottom{ top + fieldSize * cellSize };
+
+    int width{ size * cellSize * widthRate };
+    int height{ cellSize };
+
+    int row{ top };
+    int column{ left };
+    bool direction{ false };
+
+    int rowShip{}, columnShip{};
+
+    Ship* ship{ nullptr };
+    
+
+    View* shipView = new View({ row, column },
+        { width, height },
+        Colors::Magenta, 
+        Colors::White);
+
+    shipView->Show();
+
+    Key key;
+    bool isSet{ false };
+
+    while (true)
+    {
+        isSet = false;
+        if (View::GetConsole()->KeyPressed())
+        {
+            key = (Key)View::GetConsole()->GetChar();
+
+            shipView->Hide();
+
+            switch (key)
+            {
+            case Key::ArrawLeft:
+                if (column > left)
+                {
+                    column -= cellSize * widthRate;
+                    columnShip--;
+                }
+                break;
+            case Key::ArrawRight:
+                if (direction)
+                {
+                    if (column + cellSize * widthRate < right)
+                    {
+                        column += cellSize * widthRate;
+                        columnShip++;
+                    }
+                }
+                else
+                {
+                    if (column + size * cellSize * widthRate < right)
+                    {
+                        column += cellSize * widthRate;
+                        columnShip++;
+                    }
+                }
+                break;
+            case Key::ArrawUp:
+                if (row > top)
+                {
+                    row -= cellSize;
+                    rowShip--;
+                }
+                break;
+
+            case Key::ArrawDown:
+                if (direction)
+                {
+                    if (row + size * cellSize < bottom)
+                    {
+                        row += cellSize;
+                        rowShip++;
+                    }
+                }
+                else
+                {
+                    if (row + cellSize < bottom)
+                    {
+                        row += cellSize;
+                        rowShip++;
+                    }
+                }
+                break;
+
+            case Key::Space:
+                if (direction)
+                {
+                    if (column + size * cellSize * widthRate > right)
+                        break;
+                }
+                else
+                {
+                    if (row + size * cellSize > bottom)
+                        break;
+                }
+
+                direction = !direction;
+
+                {
+                    int w = width;
+                    width = height * 2;
+                    height = w / 2;
+                }
+
+                shipView->Resize({ width, height });
+
+                break;
+
+            case Key::Enter:
+                isSet = true;
+
+                {
+                    DirectionShip shipDirection = (direction) ?
+                        DirectionShip::Vertical : DirectionShip::Horizontal;
+                    ship = new Ship({ rowShip, columnShip }, size, shipDirection);
+                }
+
+                break;
+
+            case Key::Esc:
+                isSet = true;
+                break;
+            default:
+                break;
+            }
+
+            if (isSet)
+                break;
+
+            shipView->Move({ row, column });
+            shipView->Show();
+        }
+    }
+
+    return ship;
+}
+
+PlayerConsolePlatform::PlayerConsolePlatform()
+{
+    int fieldWidth{ (fieldSize + margin) * cellSize * widthRate };
+
+    for (int size{}; size < shipCounts.size(); size++)
+    {
+        View* shipView = new View(
+            { rowStart + size * 2 * cellSize , columnStart + fieldWidth + 3 * margin * cellSize },
+            { (size + 1) * cellSize * widthRate, cellSize },
+            Colors::Green, Colors::White);
+
+        shipViews[size] = shipView;
+    }
 }
 
 std::vector<Ship*> PlayerConsolePlatform::SetFlotilla(std::string name)
 {
     this->FieldShow(name);
 
-    this->SelectShip();
+    Ship* ship;
+    int selectShip;
+
+    while (true)
+    {
+        selectShip = this->SelectShip();
+        ship = this->SetShip(selectShip + 1);
+
+        if (ship)
+        {
+            this->flotilla.push_back(ship);
+            this->shipCounts[selectShip]--;
+        }
+
+        this->ShipsShow();
+
+        int countAll = std::accumulate(shipCounts.begin(), shipCounts.end(), 0);
+        if (!countAll)
+            break;
+    }
+    
+
+    View::GetConsole()->GetChar();
+    
 
 
     return std::vector<Ship*>();

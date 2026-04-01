@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <array>
+#include <numeric>
 
 #include "Console.h"
 #include "View.h"
@@ -37,6 +38,7 @@ class PlayerConsolePlatform : public IPlayerPlatform
 	const int columnStart{ 5 };
 
 	std::vector<Ship*> flotilla;
+	std::array<View*, 4> shipViews;
 	std::array<int, 4> shipCounts{ 4, 3, 2, 1 };
 
 	void FieldShow(std::string name);
@@ -47,6 +49,8 @@ class PlayerConsolePlatform : public IPlayerPlatform
 	bool IsSetShip(Ship* ship);
 
 public:
+	PlayerConsolePlatform();
+
 	std::vector<Ship*> SetFlotilla(std::string name) override;
 	Point Shot() override { return Point(); };
 };
