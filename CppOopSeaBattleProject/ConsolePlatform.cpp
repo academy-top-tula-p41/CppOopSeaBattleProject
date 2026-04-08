@@ -321,6 +321,8 @@ Ship* PlayerConsolePlatform::SetShip(int size)
                     ship = new Ship({ rowShip, columnShip }, size, shipDirection);
                 }
 
+
+
                 break;
 
             case Key::Esc:
@@ -339,6 +341,33 @@ Ship* PlayerConsolePlatform::SetShip(int size)
     }
 
     return ship;
+}
+
+bool PlayerConsolePlatform::IsSetShip(Ship* ship)
+{
+    bool isNotSet{ false };
+    for (Ship* s : flotilla)
+    {
+        int row{ ship->Row() };
+        int column{ ship->Column() };
+        for (int d{}; d < ship->Size(); d++)
+        {
+            for (int rowDx{ -1 }; rowDx < 2; rowDx++)
+            {
+                for (int columnDx{ -1 }; columnDx < 2; columnDx++)
+                {
+                    isNotSet = s->IsPoint({ row + rowDx, column + columnDx });
+                    if (isNotSet) break;
+                }
+                if (isNotSet) break;
+            }
+            if (isNotSet) break;
+
+            (ship->Direction() == DirectionShip::Horizontal) ? column++ : row++;
+        }
+        if (isNotSet) break;
+    }
+    return !isNotSet;
 }
 
 PlayerConsolePlatform::PlayerConsolePlatform()
