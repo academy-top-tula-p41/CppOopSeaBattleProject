@@ -11,6 +11,8 @@ class Game
 public:
 	Game(Platform* platform);
 
+	std::vector<Player*>& Players();
+
 	void Setup();
 	void Process();
 };

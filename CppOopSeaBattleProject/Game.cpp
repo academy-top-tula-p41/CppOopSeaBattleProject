@@ -3,6 +3,11 @@
 Game::Game(Platform* platform) 
 	: platform{ platform }{}
 
+std::vector<Player*>& Game::Players()
+{
+	return this->players;
+}
+
 void Game::Setup()
 {
 	std::string name = platform->GamePlatform()->SetupGame();
@@ -23,11 +28,14 @@ void Game::Process()
 	HitType hit;
 	Point point;
 
+	platform->GamePlatform()->ViewGame();
+
 	while (true)
 	{
 		point = players[currentPlayer]->Shot();
-
 		hit = players[!currentPlayer]->CheckShot(point);
+
+		this->platform->GamePlatform()->ViewShot(point, currentPlayer);
 
 		if (hit == HitType::Destroy)
 		{

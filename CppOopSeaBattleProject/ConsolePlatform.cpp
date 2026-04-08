@@ -1,5 +1,38 @@
 #include "ConsolePlatform.h"
 
+void GameConsolePlatform::SetGame(Game* game)
+{
+    this->game = game;
+}
+
+void GameConsolePlatform::ViewFlottilla()
+{
+    Player* humanPlayer{ this->game->Players()[0] };
+
+    int top{ rowStart + margin + 1 };
+    int left{ columnStart + margin * cellSize };
+    
+    for (Ship* ship : humanPlayer->Flotilla())
+    {
+        int shipRow{ top + ship->Row() * cellSize };
+        int shipColumn{ left + ship->Column() * cellSize * widthRate };
+        int shipWidth{ ship->Size() * cellSize * widthRate };
+        int shipHeight{ cellSize };
+
+        if (ship->Direction() == DirectionShip::Vertical)
+        {
+            int w = shipWidth;
+            shipWidth = shipHeight * 2;
+            shipHeight = w / 2;
+        }
+
+        View* shipView = new View({ shipRow, shipColumn },
+            { shipWidth, shipHeight },
+            Colors::Green, Colors::White);
+        shipView->Show();
+    }
+}
+
 std::string GameConsolePlatform::SetupGame()
 {
     View* welcomeView = new View({ rowStart, columnStart },
@@ -26,6 +59,115 @@ std::string GameConsolePlatform::SetupGame()
 
     return name;
 }
+
+void GameConsolePlatform::ViewGame()
+{
+    int fieldWidth{ (fieldSize + margin) * cellSize * widthRate };
+    int fieldHeight{ (fieldSize + margin) * cellSize };
+
+    // Human FieldView
+    View* humanFieldView = new View({ rowStart, columnStart },
+        { fieldWidth, fieldHeight },
+        Colors::Blue, Colors::White);
+    humanFieldView->Show();
+
+    std::string name{ game->Players()[0]->Name() };
+    humanFieldView->GetConsole()->WritePosition(
+        Position{ rowStart, columnStart + (fieldWidth - (int)name.length()) / 2 },
+        name);
+
+    int row{ rowStart + cellSize };
+    for (int i{}; i < fieldSize; i++)
+    {
+        humanFieldView->GetConsole()->WriteWidthPosition(
+            { row, columnStart + (i + 1) * cellSize * widthRate + margin },
+            cellSize,
+            std::string(1, (char)('A' + i)));
+    }
+
+    int column{ columnStart + cellSize };
+    for (int i{}; i < fieldSize; i++)
+    {
+        humanFieldView->GetConsole()->WriteWidthPosition(
+            { rowStart + (i + 1) * cellSize + margin, column },
+            cellSize,
+            std::to_string(i + 1));
+    }
+
+    for (int line{}; line < fieldSize * cellSize; line++)
+        humanFieldView->GetConsole()->WritePosition(
+            { rowStart + margin + line + 1, columnStart + margin * cellSize },
+            std::string(fieldSize * cellSize * widthRate, (char)GameChar::Water));
+
+
+    // Computer FieldView
+
+    int compRowStart{ rowStart };
+    int compColumnStart{ columnStart + fieldWidth + margin * cellSize * widthRate };
+
+    View* compFieldView = new View({ compRowStart, compColumnStart },
+        { fieldWidth, fieldHeight },
+        Colors::Blue, Colors::White);
+    compFieldView->Show();
+
+    name = game->Players()[1]->Name();
+    compFieldView->GetConsole()->WritePosition(
+        Position{ compRowStart, compColumnStart + (fieldWidth - (int)name.length()) / 2 },
+        name);
+
+    row = compRowStart + cellSize;
+    for (int i{}; i < fieldSize; i++)
+    {
+        compFieldView->GetConsole()->WriteWidthPosition(
+            { row, compColumnStart + (i + 1) * cellSize * widthRate + margin },
+            cellSize,
+            std::string(1, (char)('A' + i)));
+    }
+
+    column = compColumnStart + cellSize;
+    for (int i{}; i < fieldSize; i++)
+    {
+        compFieldView->GetConsole()->WriteWidthPosition(
+            { compRowStart + (i + 1) * cellSize + margin, column },
+            cellSize,
+            std::to_string(i + 1));
+    }
+
+    for (int line{}; line < fieldSize * cellSize; line++)
+        compFieldView->GetConsole()->WritePosition(
+            { compRowStart + margin + line + 1, compColumnStart + margin * cellSize },
+            std::string(fieldSize * cellSize * widthRate, (char)GameChar::Water));
+
+
+    this->ViewFlottilla();
+}
+
+void GameConsolePlatform::ViewShot(Point point, bool currentPlayer)
+{
+    Field* field = this->game->Players()[!currentPlayer]->BattleField();
+
+    int fieldWidth{ (fieldSize + margin) * cellSize * widthRate };
+    int fieldHeight{ (fieldSize + margin) * cellSize };
+
+    int row{ rowStart + margin + 1 };
+    int column{};
+
+    if (currentPlayer)
+        column = columnStart + margin * cellSize;
+    else
+        column = columnStart + fieldWidth + margin * cellSize * widthRate;
+
+    char shotChar = (char)((field->GetCell(point)->Type() == CellType::Water) ?
+                    GameChar::Water : GameChar::Deck);
+    View::GetConsole()->Foreground(Colors::Red);
+    View::GetConsole()->Background(Colors::White);
+    for (int l{}; l < cellSize; l++)
+        View::GetConsole()->WritePosition({ row + l, column },
+            std::string(cellSize * widthRate, shotChar));
+}
+
+
+
 
 void PlayerConsolePlatform::FieldShow(std::string name)
 {
@@ -313,18 +455,20 @@ Ship* PlayerConsolePlatform::SetShip(int size)
                 break;
 
             case Key::Enter:
-                isSet = true;
-
                 {
                     DirectionShip shipDirection = (direction) ?
                         DirectionShip::Vertical : DirectionShip::Horizontal;
                     ship = new Ship({ rowShip, columnShip }, size, shipDirection);
+                    
+                    isSet = this->IsSetShip(ship);
+
+                    if (!isSet)
+                    {
+                        delete ship;
+                        ship = nullptr;
+                    }
                 }
-
-
-
                 break;
-
             case Key::Esc:
                 isSet = true;
                 break;
@@ -409,11 +553,87 @@ std::vector<Ship*> PlayerConsolePlatform::SetFlotilla(std::string name)
         if (!countAll)
             break;
     }
+
+    //View::GetConsole()->GetChar();
+
+    return this->flotilla;
+}
+
+Point PlayerConsolePlatform::Shot()
+{
+    int fieldWidth{ (fieldSize + margin) * cellSize * widthRate };
+    int fieldHeight{ (fieldSize + margin) * cellSize };
     
+    int compRowStart{ rowStart };
+    int compColumnStart{ columnStart + fieldWidth + margin * cellSize * widthRate };
 
-    View::GetConsole()->GetChar();
-    
+    int top{ compRowStart + margin + 1 };
+    int left{ compColumnStart + margin * cellSize };
+    int bottom{ top + fieldSize * cellSize };
+    int right{ left + fieldSize * cellSize * widthRate };
 
+    View* cursorView = new View({ top, left },
+        { cellSize * widthRate, cellSize },
+        Colors::Cyan, Colors::Cyan);
+    cursorView->Show();
 
-    return std::vector<Ship*>();
+    Key key;
+    bool isShot;
+
+    int row{};
+    int column{};
+
+    while (true)
+    {
+        if (View::GetConsole()->KeyPressed())
+        {
+            key = (Key)View::GetConsole()->GetChar();
+            isShot = false;
+            switch (key)
+            {
+            case Key::ArrawLeft:
+                if (column > 0)
+                    column--;
+                else
+                    column = fieldSize - 1;
+                break;
+            case Key::ArrawRight:
+                if (column < fieldSize - 1)
+                    column++;
+                else
+                    column = 0;
+                break;
+            case Key::ArrawUp:
+                if (row > 0)
+                    row--;
+                else
+                    row = fieldSize - 1;
+                break;
+            case Key::ArrawDown:
+                if (row < fieldSize - 1)
+                    row++;
+                else
+                    row = 0;
+                break;
+            case Key::Enter:
+            case Key::Space:
+                isShot = true;
+                break;
+            case Key::Esc:
+                break;
+            default:
+                break;
+            }
+            if (isShot)
+                break;
+
+            cursorView->Move({ top + row * cellSize,
+                               left + column * cellSize * widthRate });
+        }
+    }
+
+    cursorView->Hide();
+    delete cursorView;
+
+    return Point{ row, column };
 }

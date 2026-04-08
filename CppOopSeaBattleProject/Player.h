@@ -32,13 +32,13 @@ public:
 	HumanPlayer(std::string name, IPlayerPlatform* playerPlatform);
 
 	void SetFlotilla() override;
-	Point Shot() override { return Point{}; }
+	Point Shot() override;
 };
 
 class ComputerPlayer : public Player
 {
 public:
 	void SetFlotilla() override;
-	Point Shot() override { return Point{}; }
+	Point Shot() override;
 };
 

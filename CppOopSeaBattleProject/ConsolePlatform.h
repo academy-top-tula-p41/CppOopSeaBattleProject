@@ -7,6 +7,7 @@
 #include "Console.h"
 #include "View.h"
 #include "Platform.h"
+#include "Game.h"
 
 enum class GameChar
 {
@@ -16,6 +17,8 @@ enum class GameChar
 
 class GameConsolePlatform : public IGamePlatform
 {
+	Game* game;
+
 	const int cellSize{ 2 };
 	const int fieldSize{ 10 };
 	const int margin{ 2 };
@@ -23,8 +26,12 @@ class GameConsolePlatform : public IGamePlatform
 	const int rowStart{ 3 };
 	const int columnStart{ 5 };
 public:
+	void SetGame(Game* game);
+	void ViewFlottilla();
+
 	std::string SetupGame() override;
-	void ViewGame() override {};
+	void ViewGame() override;
+	void ViewShot(Point point, bool currentPlayer) override;
 	void GameOver() override {};
 };
 
@@ -52,6 +59,6 @@ public:
 	PlayerConsolePlatform();
 
 	std::vector<Ship*> SetFlotilla(std::string name) override;
-	Point Shot() override { return Point(); };
+	Point Shot() override;
 };
 
